@@ -16,39 +16,43 @@ You run the workflow from a Jupyter Notebook and receive a final Markdown articl
   - Renders the resulting article
 
 ## Requirements
-- Python 3.13 (recommended; project is set up for Python 3.13.x)
+- Python 3.11–3.13 (Windows users on Python 3.13 should ensure numpy>=2.1 to avoid building from source)
 - Jupyter environment (e.g., JupyterLab or VS Code with Python/Jupyter extensions)
 - An OpenAI API key
 
-## Installation
-1) Create and activate a virtual environment (recommended):
-- macOS/Linux:
-```shell script
-# Bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
+## Installation (with uv)
+We recommend uv for fast, reproducible environments without polluting your global Python.
 
-
+0) Install uv (one-time):
 - Windows (PowerShell):
-```textmate
-# PowerShell
-python -m venv .venv
+  - winget install --id=astral-sh.uv -e
+- macOS/Linux: see https://docs.astral.sh/uv/getting-started/ for the best method
+
+1) Create a local virtual environment in this project:
+```powershell
+uv venv
+# Activate it (PowerShell):
 .venv\Scripts\Activate.ps1
 ```
-
-
-2) Install dependencies:
-```shell script
-# Bash
-pip install --upgrade pip
-pip install crewai==0.28.8 crewai_tools==0.1.6 langchain_community==0 jupyter
+```bash
+# bash
+source .venv/Scripts/activate
 ```
 
+2) Install all dependencies declared in pyproject.toml:
+```powershell
+uv sync
+```
+This will also generate a uv.lock file with pinned versions. Commit it if you want fully reproducible installs for collaborators/CI.
+
+3) (Optional) Register a Jupyter kernel for this environment so the notebooks can select it:
+```powershell
+python -m ipykernel install --user --name crew-ai-agents --display-name "Python (crew-ai-agents)"
+```
 
 Notes:
-- The notebook also uses IPython’s display utilities; installing jupyter pulls these in.
-- If you already have Jupyter installed, you can skip adding it again.
+- Python 3.11–3.13 is supported. The project pins numpy>=2.1 to avoid source builds on Python 3.13.
+- To add a new dependency later, run for example: `uv add pandas` (this updates pyproject.toml and uv.lock), then `uv sync`.
 
 ## Environment Variables
 You must set your OpenAI API key in the environment before running.
@@ -116,6 +120,9 @@ Each agent receives a role, a goal, and a backstory to guide behavior. Tasks spe
   - Try again later, or change the model via OPENAI_MODEL_NAME.
 - Dependency conflicts:
   - Use a fresh virtual environment and install the pinned versions listed above.
+- Windows Meson/Visual Studio compiler error when installing numpy (e.g., "ERROR: Unknown compiler(s): ..." during "Preparing metadata"):
+  - This usually means pip tried to build an old numpy from source on Python 3.13. Fix by installing prebuilt wheels with: pip install "numpy>=2.1,<3" before other packages, or use the provided install command above.
+  - Alternative: install the Microsoft Build Tools (C++ tools) and configure VS environment, but pinning numpy>=2.1 is simpler and recommended.
 
 ## Security Notes
 - Treat your API key like a password. Do not commit it to version control.
